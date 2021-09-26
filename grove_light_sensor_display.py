@@ -49,7 +49,7 @@ print('Starting')
 
 
 # Connect to Adafruit mqtt server
-load_dotenv('.env')
+load_dotenv('/home/pi/my/.env')
 ADAFRUITUSER = os.getenv('ADAFRUITUSER')
 ADAFRUITKEY = os.getenv('ADAFRUITKEY')
 
@@ -79,8 +79,7 @@ threshold = 10
 setRGB(0,255,0)
 
 # Read interval
-read_interval = 15
-
+read_interval = 120
 
 grovepi.pinMode(light_sensor,"INPUT")
 grovepi.pinMode(led,"OUTPUT")
@@ -103,7 +102,14 @@ while True:
         AIOclient.publish('Humidity', hum)
 
         # Get humidity of plant 1
-        humplant1_value = grovepi.analogRead(humplant1_sensor)
+        # The no humidity raw value from the sensor is 1024. 
+        # And the total water connected is ~300
+        # After the diff with 1024, the values are
+        # No humidity = ~0
+        # All humidity = ~730
+        # To send a value between 0 and 100, we normalize
+        # dividing by 720 and multiplying by 100
+        humplant1_value = int((1024 - grovepi.analogRead(humplant1_sensor)) / 730 * 100)
         AIOclient.publish('Plant1_hum', humplant1_value)
         print(f'Hum plant1 = {humplant1_value}')
 
